@@ -41,6 +41,7 @@ sample/Linux/bin/onboardSDK
 tags
 /.cproject
 /.project
+/.settings/
 
 .vagrant/
 .idea/
