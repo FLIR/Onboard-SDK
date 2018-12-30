@@ -211,10 +211,10 @@ configure_file(${CURRENT_CMAKE_MODULE_PATH}/DJIOSDKConfigVersion.cmake.in
         "${CURRENT_CMAKE_MODULE_PATH}/DJIOSDKConfigVersion.cmake" @ONLY)
 
 # Install the DJIOSDKConfig.cmake and DJIOSDKConfigVersion.cmake
-install(FILES
-        "${CURRENT_CMAKE_MODULE_PATH}/DJIOSDKConfig.cmake"
-        "${CURRENT_CMAKE_MODULE_PATH}/DJIOSDKConfigVersion.cmake"
-        DESTINATION "${INSTALL_CMAKE_DIR}" COMPONENT dev)
+#install(FILES
+#        "${CURRENT_CMAKE_MODULE_PATH}/DJIOSDKConfig.cmake"
+#        "${CURRENT_CMAKE_MODULE_PATH}/DJIOSDKConfigVersion.cmake"
+#        DESTINATION "${INSTALL_CMAKE_DIR}" COMPONENT dev)
 
 FILE(GLOB OSDK_LIB_HEADERS
         api/inc/*.h*
@@ -227,8 +227,8 @@ FILE(GLOB OSDK_LIB_HEADERS
 
 # Append advanced sensing headers
 if(ADVANCED_SENSING)
-  install(FILES ${ADVANCED_SENSING_LIBRARY}
-        DESTINATION "${INSTALL_LIB_DIR}" COMPONENT shlib)
+#  install(FILES ${ADVANCED_SENSING_LIBRARY}
+#        DESTINATION "${INSTALL_LIB_DIR}" COMPONENT shlib)
 
   set(OSDK_LIB_HEADERS 
       ${OSDK_LIB_HEADERS} 
@@ -243,12 +243,12 @@ endif()
 set_target_properties(${PROJECT_NAME} PROPERTIES
         PUBLIC_HEADER "${OSDK_LIB_HEADERS}")
 
-install(TARGETS ${PROJECT_NAME}
-        EXPORT djiosdkTargets
-        ARCHIVE DESTINATION "${INSTALL_LIB_DIR}" COMPONENT shlib
-        PUBLIC_HEADER DESTINATION "${INSTALL_INCLUDE_DIR}" COMPONENT dev
-        )
+#install(TARGETS ${PROJECT_NAME}
+#        EXPORT djiosdkTargets
+#        ARCHIVE DESTINATION "${INSTALL_LIB_DIR}" COMPONENT shlib
+#        PUBLIC_HEADER DESTINATION "${INSTALL_INCLUDE_DIR}" COMPONENT dev
+#        )
 
 # Install the export set for use with the install-tree
-install(EXPORT djiosdkTargets DESTINATION
-        "${INSTALL_CMAKE_DIR}" COMPONENT dev)
+#install(EXPORT djiosdkTargets DESTINATION
+#        "${INSTALL_CMAKE_DIR}" COMPONENT dev)
