@@ -1725,7 +1725,7 @@ Vehicle::PushDataHandler(void* eventData)
   {
     if (subscribe)
     {
-      DDEBUG("Decode callback subscribe");
+	  DDEBUG("Decode callback subscribe cmd_set=0x%02x cmd_id=0x%02x", cmd[0], cmd[1]);
       if (subscribe->subscriptionDataDecodeHandler.callback)
       {
         subscribe->subscriptionDataDecodeHandler.callback(
