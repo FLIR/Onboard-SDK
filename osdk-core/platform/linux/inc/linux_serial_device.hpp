@@ -72,7 +72,7 @@ public:
   //! your serial connection
   int checkBaudRate(uint8_t (&buf)[BUFFER_SIZE])
   {
-    return (_checkBaudRate(buf));
+    return _checkBaudRate(buf);
   }
   int setSerialPureTimedRead();
   int unsetSerialPureTimedRead();
