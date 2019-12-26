@@ -98,6 +98,11 @@ public:
     bool    updated = false;
   } WayPoint2CommonRsp;
 
+  typedef struct ExtendedFunctionRsp{
+    Entry   info;
+    bool    updated = false;
+  } ExtendedFunctionRsp;
+
   typedef struct WayPointVelocityInternal
   {
     uint8_t   ack;
@@ -116,6 +121,13 @@ public:
     uint32_t value;
   } MFIOGetInternal; // pack(1)
 
+  typedef struct ParamAckInternal
+  {
+    uint8_t retCode;       /*!< return code */
+    uint32_t hashValue;    /*!< parameter hash value*/
+    uint8_t paramValue[8]; /*!< parameter value*/
+  } ParamAckInternal;      // pack(1)
+
   /*
    * ACK structures exposed to user
    */
@@ -132,6 +144,21 @@ public:
     uint32_t data;
   } ErrorCode; // pack(1)
 
+  /*! @brief This struct is returned from the
+   * DJI::OSDK::Control::writeParameterByHash
+   * blocking API
+   */
+  typedef struct ParamAck
+  {
+    Entry info;
+    ParamAckInternal data;
+    bool updated = false;
+  } ParamAck;  // pack(1)
+
+  /*! @brief This struct is returned from the DJI::OSDK::MFIO::getValue
+   * blocking API
+   *
+   */
   typedef struct MFIOGet
   {
     ErrorCode ack;
@@ -148,7 +175,7 @@ public:
     float32_t maxRadius;
   } HotPointStart; // pack(1)
 
-  /*! @brief This struct is returned from the DJI::OSDK::HotpointMission::read
+  /*! @brief This struct is returned from the DJI::OSDK::HotpointMission::readData
    * blocking API
    *
    */
@@ -314,6 +341,7 @@ public:
     WayPointIndexInternal    wpIndexACK;
     WayPointVelocityInternal wpVelocityACK;
     MFIOGetInternal          mfioGetACK;
+    ParamAckInternal         paramAckData;
 
     /*
      * Push Data in ground-station mode

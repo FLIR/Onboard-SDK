@@ -48,7 +48,7 @@ if (CMAKE_SYSTEM_NAME MATCHES Linux)
 endif ()
 
 if (CMAKE_SYSTEM_NAME MATCHES Darwin)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -g -O0")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -g -O0 -Wall -Werror")
 endif ()
 
 if (CMAKE_BUILD_TYPE MATCHES "Debug")
@@ -80,6 +80,8 @@ include (${CMAKE_CURRENT_SOURCE_DIR}/../contrib/DJIConfig.cmake)
 ## Your package locations should be listed before other locations
 include_directories(
         api/inc
+        modules/inc/payload
+        modules/inc/flight
         protocol/inc
         hal/inc
         utility/inc
@@ -94,6 +96,8 @@ endif()
 ## Source code for OSDK CORE
 FILE(GLOB OSDK_LIB_SRCS
         api/src/*.cpp
+        modules/src/payload/*.cpp
+        modules/src/flight/*.cpp
         protocol/src/*.cpp
         hal/src/*.cpp
         utility/src/*.cpp
@@ -264,6 +268,8 @@ configure_file(${CURRENT_CMAKE_MODULE_PATH}/DJIOSDKConfigVersion.cmake.in
 
 FILE(GLOB OSDK_LIB_HEADERS
         api/inc/*.h*
+        modules/inc/payload/*.h*
+        modules/inc/flight/*.h*
         protocol/inc/*.h*
         hal/inc/*.h*
         utility/inc/*.h*

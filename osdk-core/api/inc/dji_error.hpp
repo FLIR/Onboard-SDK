@@ -29,26 +29,281 @@
 #ifndef DJI_ERROR_H
 #define DJI_ERROR_H
 
+#ifdef STM32
 #include <stdint.h>
+#else
+#include <cstdint>
+#endif
+#include <map>
 
-namespace DJI
-{
-namespace OSDK
-{
+namespace DJI {
+namespace OSDK {
 
 /*! @class ErrorCode contains all the acknowledgments sent by the aircraft
  * @details Each component of the SDK has its own subclass defined within the
  * ErrorCode class.
  */
-class ErrorCode
-{
-public:
-  /*!
-   * @brief Common ACK Error Codes
+class ErrorCode {
+ public:
+  /*! @brief Module ID type used in OnboardSDK Unified error
+  */
+
+  typedef uint8_t ModuleIDType;
+
+  /*! @brief Function ID type used in OnboardSDK Unified error
    */
-  class CommonACK
+  typedef uint8_t FunctionIDType;
+
+  /*! @brief RawRetCode ID type used in OnboardSDK Unified error
+   */
+  typedef uint32_t RawRetCodeType;
+
+  /*! @brief Function max count of each module
+   */
+  static const uint8_t functionMaxCnt = 20;
+  /*! @brief Module ID used in OnboardSDK Unified error
+   */
+  enum ModuleID {
+    SysModule = 0,
+    RESERVE_1 = 1,
+    RESERVE_2 = 2,
+    RESERVE_3 = 3,
+    RESERVE_4 = 4,
+    RESERVE_5 = 5,
+    RESERVE_6 = 6,
+    RESERVE_7 = 7,
+    RESERVE_8 = 8,
+    RESERVE_9 = 9,
+    RESERVE_10 = 10,
+    FCModule = 11,
+    GimbalModule = 12,
+    CameraModule = 13,
+    PSDKModule = 14,
+    RCModule = 15,
+    BatteryModule = 16,
+    ModuleMaxCnt,
+  };
+
+  /*! @brief Function ID used with SystemModule in error codes
+   */
+  enum SystemFunctionID {
+    SystemCommon = 0,
+  };
+  /*! @brief Function ID used with FCModule in error codes
+   */
+  enum FCFunctionID {
+    FCControlTask    = 0,
+    FCSubscribe      = 1,
+    FCMission        = 2,
+    FCParameterTable = 4,
+    FCSetHomeLocation= 5,
+    FCAvoidObstacle  = 6,
+  };
+
+  /*! @brief Function ID used with CameraModule in error codes
+   */
+  enum CameraFunctionID {
+    CameraCommon = 0,
+  };
+
+  /*! @brief Function ID used with PSDKModule in error codes
+   */
+  enum PSDKFunctionID {
+    PSDKCommon = 0,
+  };
+
+  enum SYSTEM_ERROR_RAW_CODE {
+    Success              = 0x00000000, /*!< Execute successfully */
+    AllocMemoryFailed    = 0x00000001, /*!< Out of memory */
+    ReqNotSupported      = 0x00000002, /*!< Request not supported */
+    Timeout              = 0x00000003, /*!< Execute timeout */
+    UnpackDataMismatch   = 0x00000004, /*!< Pack unpack failed */
+    InstInitParamInvalid = 0x00000005, /*!< Instance init parameter invalid */
+    UserCallbackInvalid  = 0x00000006, /*!< User Callback is a invalid value */
+  };
+
+  /*! @brief Unified error type
+   */
+  typedef int64_t ErrorCodeType;
+
+  /*! @brief Releated messages about error codes
+   */
+  typedef struct ErrorCodeMsg {
+    ErrorCodeMsg(const char* moduleMsg, const char* errorMsg,
+                 const char* solutionMsg)
+        : moduleMsg(moduleMsg), errorMsg(errorMsg), solutionMsg(solutionMsg){};
+    const char* moduleMsg;
+    const char* errorMsg;
+    const char* solutionMsg;
+  } ErrorCodeMsg;
+
+  /*! @brief Map container type of errCode ID and msg
+   */
+  typedef std::map<const RawRetCodeType, ErrorCodeMsg> ErrorCodeMapType;
+
+  typedef struct FunctionDataType
+  {
+    const char* FunctionName;
+    const ErrorCodeMapType (*getMap)();
+  } FunctionDataType;
+
+  typedef struct ModuleDataType
+  {
+    const char* ModuleName;
+    const FunctionDataType *data;
+  } ModuleDataType;
+
+  /*! @brief Build error code
+   *  @param moduleID module ID used in errCode ref to
+   * DJI::OSDK::ErrorCode::ModuleID
+   *  @param functionID function ID used in errCode ref to
+   * DJI::OSDK::ErrorCode::xxxxFunctionID
+   *  @param rawRetCode raw return code from the ack data
+   *  @return Unified error type
+   */
+  static constexpr ErrorCodeType getErrorCode(ModuleIDType moduleID,
+                                          FunctionIDType functionID,
+                                          RawRetCodeType rawRetCode) {
+    return (!rawRetCode) ? (
+      ((ErrorCodeType) ErrorCode::SysModule << moduleIDLeftMove)
+        | ((ErrorCodeType) ErrorCode::SystemCommon << functionIDLeftMove) |
+        (ErrorCodeType) 0x00000000) :
+           (((ErrorCodeType) moduleID << moduleIDLeftMove) |
+             ((ErrorCodeType) functionID << functionIDLeftMove) |
+             (ErrorCodeType) rawRetCode);
+  }
+
+  /*! @brief Get the module ID from errCode
+   *  @param errCode Unified error type
+   *  @return Module ID ref to DJI::OSDK::ErrorCode::ModuleID
+   */
+  static ErrorCode::ModuleIDType getModuleID(ErrorCodeType errCode);
+
+  /*! @brief Get the module name from errCode
+   *  @param errCode Unified error type
+   *  @return Module name
+   */
+  static const char* getModuleName(ErrorCodeType errCode);
+
+  /*! @brief Get the function name from errCode
+   *  @param errCode Unified error type
+   *  @return Function name
+   */
+  static ErrorCode::FunctionIDType getFunctionID(ErrorCodeType errCode);
+
+  /*! @brief Get the raw reture code from errCode
+   *  @param errCode Unified error type
+   *  @return Function name
+   */
+  static ErrorCode::RawRetCodeType getRawRetCode(ErrorCodeType errCode);
+
+  /*! @brief Get error code messages from errCode
+   *  @param errCode Unified error type
+   *  @return Releated error code messages
+   */
+  static ErrorCodeMsg getErrorCodeMsg(int64_t errCode);
+
+  /*! @brief Print error code messages to console
+   *  @param errCode Unified error type
+   */
+  static void printErrorCodeMsg(int64_t errCode);
+
+  class FlightControllerErr
   {
   public:
+    class ParamReadWriteErr
+    {
+    public:
+      static const ErrorCodeType Fail;
+      static const ErrorCodeType InvalidParameter;
+    };
+
+    class SetHomeLocationErr
+    {
+    public:
+      static const ErrorCodeType Fail;
+    };
+  };
+  /*! @brief camera api error code
+   */
+  class CameraCommonErr {
+   public:
+    static const ErrorCodeType InvalidCMD;
+    static const ErrorCodeType Timeout;
+    static const ErrorCodeType OutOfMemory;
+    static const ErrorCodeType InvalidParam;
+    static const ErrorCodeType InvalidState;
+    static const ErrorCodeType TimeNotSync;
+    static const ErrorCodeType ParamSetFailed;
+    static const ErrorCodeType ParamGetFailed;
+    static const ErrorCodeType SDCardMISSING;
+    static const ErrorCodeType SDCardFull;
+    static const ErrorCodeType SDCardError;
+    static const ErrorCodeType SensorError;
+    static const ErrorCodeType SystemError;
+    static const ErrorCodeType ParamLenTooLong;
+    static const ErrorCodeType ModuleInactivated;
+    static const ErrorCodeType FWSeqNumNotInOrder;
+    static const ErrorCodeType FWCheckErr;
+    static const ErrorCodeType FlashWriteError;
+    static const ErrorCodeType FWInvalidType;
+    static const ErrorCodeType RCDisconnect;
+    static const ErrorCodeType HardwareErr;
+    static const ErrorCodeType UAVDisconnect;
+    static const ErrorCodeType UpgradeErrorNow;
+    static const ErrorCodeType UndefineError;
+  };
+
+  /*! @brief camera api error code
+ */
+  class PSDKCommonErr {
+   public:
+    static const ErrorCodeType InvalidCMD;
+    static const ErrorCodeType Timeout;
+    static const ErrorCodeType OutOfMemory;
+    static const ErrorCodeType InvalidParam;
+    static const ErrorCodeType InvalidState;
+    static const ErrorCodeType TimeNotSync;
+    static const ErrorCodeType ParamSetFailed;
+    static const ErrorCodeType ParamGetFailed;
+    static const ErrorCodeType SDCardMISSING;
+    static const ErrorCodeType SDCardFull;
+    static const ErrorCodeType SDCardError;
+    static const ErrorCodeType SensorError;
+    static const ErrorCodeType SystemError;
+    static const ErrorCodeType ParamLenTooLong;
+    static const ErrorCodeType ModuleInactivated;
+    static const ErrorCodeType FWSeqNumNotInOrder;
+    static const ErrorCodeType FWCheckErr;
+    static const ErrorCodeType FlashWriteError;
+    static const ErrorCodeType FWInvalidType;
+    static const ErrorCodeType RCDisconnect;
+    static const ErrorCodeType HardwareErr;
+    static const ErrorCodeType UAVDisconnect;
+    static const ErrorCodeType UpgradeErrorNow;
+    static const ErrorCodeType UndefineError;
+  };
+
+  /*! @brief system releated error code
+   */
+  class SysCommonErr {
+   public:
+    static const ErrorCodeType Success;
+    static const ErrorCodeType AllocMemoryFailed;
+    static const ErrorCodeType ReqNotSupported;
+    static const ErrorCodeType ReqTimeout;
+    static const ErrorCodeType UnpackDataMismatch;
+    static const ErrorCodeType InstInitParamInvalid;
+    static const ErrorCodeType UserCallbackInvalid;
+  };
+
+  /*!
+   * @brief Common ACK Error Codes
+   * @deprecated This error code type is deprecated and will replaced
+   * by new errorcode in the future.
+   */
+  class CommonACK {
+   public:
     const static uint16_t SUCCESS;
     const static uint16_t KEY_ERROR;
     const static uint16_t NO_AUTHORIZATION_ERROR;
@@ -124,7 +379,7 @@ public:
     const static uint8_t MOTOR_FAIL_RUNNING_SIMULATOR;
     /*! The aircraft (Inspire series) is setting itself to packing config.*/
     const static uint8_t MOTOR_FAIL_PACK_MODE;
-    /*! This error is caused by attitude limit of IMU if horizontal 
+    /*! This error is caused by attitude limit of IMU if horizontal
      * attitude output by navigation system is over 55 degrees when the
      * system powered up for the first time. */
     const static uint8_t MOTOR_FAIL_IMU_ATTI_LIMIT;
@@ -148,7 +403,7 @@ public:
     /*! The IMU is in calibration or the aircraft should reset after IMU
        calibration.*/
     const static uint8_t MOTOR_FAIL_IMU_CALIBRATING;
-    /*! The aircraft's horizontal attitude angle exceeds the limit 
+    /*! The aircraft's horizontal attitude angle exceeds the limit
      * angle when requesting automatic takeoff. */
     const static uint8_t MOTOR_FAIL_TAKEOFF_TILT_TOO_LARGE;
     const static uint8_t MOTOR_FAIL_RESERVED_31;
@@ -187,7 +442,7 @@ public:
     const static uint8_t MOTOR_FAIL_RESERVED_58;
     const static uint8_t MOTOR_FAIL_RESERVED_59;
     const static uint8_t MOTOR_FAIL_RESERVED_60;
-    /*! IMU is disconnected. Please ask technical assistance 
+    /*! IMU is disconnected. Please ask technical assistance
      * for help if repeats after reset. */
     const static uint8_t MOTOR_FAIL_IMU_DISCONNECTED;
     /*! RC is in calibration. Please finish rc calibration. */
@@ -220,7 +475,7 @@ public:
     const static uint8_t MOTOR_FAIL_RC_NEED_CALI;
     /*! The system detects illegal data. */
     const static uint8_t MOTOR_FAIL_INVALID_FLOAT;
-    /*! This error will happen only in M600 if the aircraft 
+    /*! This error will happen only in M600 if the aircraft
      * detects the battery number is not engouh. <br>
      * Please insert more battery. */
     const static uint8_t MOTOR_FAIL_M600_BAT_TOO_FEW;
@@ -277,10 +532,10 @@ public:
      * For M600, the minimum starting speed is 700rpm. <br>
      * For other aircrafts, the minimum starting speed is 1100rpm.*/
     const static uint8_t MOTOR_FAIL_ENGINE_START_FAILED;
-    /*! During automatic take-off, the status of aircraft doesn't 
+    /*! During automatic take-off, the status of aircraft doesn't
      * change from "on the ground" to "in the air" in 5s.*/
     const static uint8_t MOTOR_FAIL_AUTO_TAKEOFF_LAUNCH_FAILED;
-    /*! The aircraft is on a rollover on the ground or 
+    /*! The aircraft is on a rollover on the ground or
      * the attitude control fails near ground. */
     const static uint8_t MOTOR_FAIL_ROLL_OVER_ON_GRD;
     /*! Battery version error. Please check the battery version. */
@@ -300,7 +555,7 @@ public:
     const static uint8_t MOTOR_FAIL_INTERNAL_111;
     /*! The esc is in calibration. */
     const static uint8_t MOTOR_FAIL_ESC_CALIBRATING;
-    /* GPS signature is invalid because the GPS module 
+    /* GPS signature is invalid because the GPS module
      * has not received valid signature information for 2s. */
     const static uint8_t MOTOR_FAIL_GPS_SIGNATURE_INVALID;
     /* The gimbal is in calibration. */
@@ -342,10 +597,11 @@ public:
 
   /*!
    * @brief CMDSet: Activation ACK Error Codes
+   * @deprecated This error code type is deprecated and will replaced
+   * by new errorcode in the future.
    */
-  class ActivationACK
-  {
-  public:
+  class ActivationACK {
+   public:
     const static uint16_t SUCCESS;
     const static uint16_t PARAMETER_ERROR;
     const static uint16_t ENCODE_ERROR;
@@ -359,15 +615,15 @@ public:
 
   /*!
    * @brief CMDSet: Control ACK Error Codes
+   * @deprecated This error code type is deprecated and will replaced
+   * by new errorcode in the future.
    */
-  class ControlACK
-  {
-  public:
+  class ControlACK {
+   public:
     /*!
      * @brief CMDID: SetControl
      */
-    typedef struct SetControl
-    {
+    typedef struct SetControl {
       const static uint16_t RC_MODE_ERROR;
       const static uint16_t RELEASE_CONTROL_SUCCESS;
       const static uint16_t OBTAIN_CONTROL_SUCCESS;
@@ -383,8 +639,7 @@ public:
      *
      * @brief CMDID: Task
      */
-    typedef struct Task
-    {
+    typedef struct Task {
       const static uint16_t SUCCESS;
       const static uint16_t MOTOR_ON;
       const static uint16_t MOTOR_OFF;
@@ -409,8 +664,7 @@ public:
     /*
      * Task ACKs Supported in firmware version < 3.3
      */
-    typedef struct LegacyTask
-    {
+    typedef struct LegacyTask {
       const static uint16_t SUCCESS;
       const static uint16_t FAIL;
     } LegacyTask;
@@ -419,29 +673,41 @@ public:
      * @brief CMDID: SetArm supported in products with
      * firmware version < 3.3
      */
-    typedef struct SetArm
-    {
+    typedef struct SetArm {
       const static uint16_t SUCCESS;
       const static uint16_t OBTAIN_CONTROL_NEEDED_ERROR;
       const static uint16_t ALREADY_ARMED_ERROR;
       const static uint16_t AIRCRAFT_IN_AIR_ERROR;
     } SetArm;
 
-    typedef struct KillSwitch
-    {
+    typedef struct KillSwitch {
       const static uint16_t SUCCESS;
     } KillSwitch;
 
-  }; // Control class
+    enum ParamReadWrite : RawRetCodeType
+    {
+      PARAM_READ_WRITE_SUCCESS = 0,
+      PARAM_READ_WRITE_FAIL = 1,
+      PARAM_READ_WRITE_INVALID_PARAMETER = 2,
+    };
 
+    enum SetHomeLocation : RawRetCodeType
+    {
+      SET_HOME_LOCATION_SUCCESS = 0,
+      SET_HOME_LOCATION_FAIL = 1,
+    };
+
+  }; // Control class
+  
   /*!
    * @note New in 3.3 release
    *
    * @brief CMDSet: Subscribe
+   * @deprecated This error code type is deprecated and will replaced
+   * by new errorcode in the future.
    */
-  class SubscribeACK
-  {
-  public:
+   class SubscribeACK {
+   public:
     const static uint8_t SUCCESS;
     const static uint8_t ILLEGAL_DATA_LENGTH;
     const static uint8_t VERSION_DOES_NOT_MATCH;
@@ -469,15 +735,15 @@ public:
 
   /*!
    * @brief Mission ACK Error Codes
+   * @deprecated This error code type is deprecated and will replaced
+   * by new errorcode in the future.
    */
-  class MissionACK
-  {
-  public:
+  class MissionACK {
+   public:
     /*! @brief Common Mission ACK codes
      *
      */
-    typedef struct Common
-    {
+    typedef struct Common {
       const static uint8_t SUCCESS;
       const static uint8_t WRONG_WAYPOINT_INDEX;
       const static uint8_t RC_NOT_IN_MODE_F;
@@ -531,16 +797,14 @@ public:
     } Common;
 
     //! @brief Follow Mission ACK Error Code
-    typedef struct Follow
-    {
+    typedef struct Follow {
       const static uint8_t TOO_FAR_FROM_YOUR_POSITION_LACK_OF_RADIO_CONNECTION;
       const static uint8_t CUTOFF_TIME_OVERFLOW;
       const static uint8_t GIMBAL_PITCH_ANGLE_OVERFLOW;
     } Follow;
 
     //! @brief HotPoint Mission ACK Error Code
-    typedef struct HotPoint
-    {
+    typedef struct HotPoint {
       const static uint8_t INVALID_RADIUS;
       const static uint8_t YAW_RATE_OVERFLOW;
       /*
@@ -564,8 +828,7 @@ public:
     } HotPoint;
 
     //! @brief WayPoint Mission ACK Error Code
-    typedef struct WayPoint
-    {
+    typedef struct WayPoint {
       const static uint8_t INVALID_DATA;
       const static uint8_t INVALID_POINT_DATA;
       const static uint8_t TRACE_TOO_LONG;
@@ -587,26 +850,25 @@ public:
     } WayPoint;
 
     //! @brief IOC ACK Mission Error Code
-    typedef struct IOC
-    {
+    typedef struct IOC {
       const static uint8_t TOO_CLOSE_TO_HOME;
       const static uint8_t UNKNOWN_TYPE;
     } IOC;
 
-  }; // Class Mission
+  };  // Class Mission
 
   /*!
    * @brief CMDSet: MFIO
    * @note New in 3.3 release
+   * @deprecated This error code type is deprecated and will replaced
+   * by new errorcode in the future.
    */
-  class MFIOACK
-  {
-  public:
+  class MFIOACK {
+   public:
     /*!
      * @brief CMDID: init
      */
-    typedef struct init
-    {
+    typedef struct init {
       const static uint8_t SUCCESS;
       const static uint8_t UNKNOWN_ERROR;
       const static uint8_t PORT_NUMBER_ERROR;
@@ -617,8 +879,7 @@ public:
     /*!
      * @brief CMDID: set
      */
-    typedef struct set
-    {
+    typedef struct set {
       const static uint8_t SUCCESS;
       /*!Port not exit or not an output configuration*/
       const static uint8_t CHANNEL_ERROR;
@@ -629,16 +890,107 @@ public:
     /*!
      * @brief CMDID: get
      */
-    typedef struct get
-    {
-      const static uint8_t SUCCESS; //! @note Anything else is failure
+    typedef struct get {
+      const static uint8_t SUCCESS;  //! @note Anything else is failure
     } get;
 
-  }; // Class MFIO
+  };  // Class MFIO
 
-}; // Class ErrorCode
 
-} // namespace OSDK
-} // namespace DJI
+  enum DJI_CMD_RETURN_CODE {
+    SUCCESS                          = 0x00, /*!< Execute successfully */
+    FILE_TRANSFER_BUSY               = 0xC0, /*!< Busy transfering file */
+    NAVIGATION_IS_FORBIDDEN          = 0xD0, /*!< RC mode is not F mode or FC disable navigation mode */
+    NAVIGATION_IS_OFF                = 0xD1, /*!< FC disable navigation mode */
+    INVALID_TASK_INFORMATION         = 0xD2, /*!< No valid task information */
+    TASK_UPLOAD_ERROR                = 0xD3, /*!< Task up load error */
+    INVALID_REQUEST_PARAMETER        = 0xD4, /*!< The request parameter is invalid */
+    MAY_CROSS_RESTRICTED_AREA        = 0xD5, /*!< The task may across the restricted area */
+    EXCEEDED_INPUT_TIME_LIMIT        = 0xD6, /*!< Task time may exceed input time limit */
+    EXECUTING_HIGHER_PRIORITY_TASK   = 0xD7, /*!< A task of higher priority is being excuting */
+    CANNOT_START_TASK_WEAK_GPS       = 0xD8, /*!< Weak GPS, cannot start the task*/
+    CANNOT_START_TASK_VLOTAGE_ALARM  = 0xD9, /*!< Level 1 volt warning, cannot start the task */
+    UNSUPPORTED_COMMAND              = 0xE0, /*!< Do not support this command */
+    TIMEOUT                          = 0xE1, /*!< Execution timeout */
+    RAM_ALLOCATION_FAILED            = 0xE2, /*!< Memory alloc failed */
+    INVALID_COMMAND_PARAMETER        = 0xE3, /*!< Invalid parameter for the command */
+    UNSUPPORTED_COMMAND_IN_CUR_STATE = 0xE4, /*!< Do not support this command in the current state */
+    CAMERA_TIME_NOT_SYNCHRONIZED     = 0xE5, /*!< Timestamp of camera is not synchronized */
+    PARAMETER_SET_FAILED             = 0xE6, /*!< Setting parameter failed */
+    PARAMETER_GET_FAILED             = 0xE7, /*!< Getting parameter failed */
+    SD_CARD_MISSING                  = 0xE8, /*!< SD card is not installed */
+    SD_CARD_FULL                     = 0xE9, /*!< SD card is full */
+    SD_CARD_ERROR                    = 0xEA, /*!< Error accessing the SD Card */
+    SENSOR_ERROR                     = 0xEB, /*!< Sensor go wrong */
+    SYSTEM_ERROR                     = 0xEC, /*!< System error */
+    PARAMETER_TOTAL_TOO_LONG         = 0xED, /*!< Length of the parameter is too long */
+    MODULE_INACTIVATED               = 0xEE, /*!< Module is too not activated yet */
+    USER_UNBOND                      = 0xEF, /*!< User is not bond yet */
+    FIRMWARE_DATA_NUM_DISCONTINUOUS  = 0xF0, /*!< Fireware data number is a discontinuous number */
+    FIRMWARE_DATA_OVERLOAD_FLASH     = 0xF1, /*!< Fireware data number overload flash */
+    FIRMWARE_VERIFICATION_ERROR      = 0xF2, /*!< Error verifying fireware */
+    FLASH_ERASE_ERROR                = 0xF3, /*!< Error erasing flash */
+    FLASH_WRITE_ERROR                = 0xF4, /*!< Error writing flash */
+    UPGRADE_STATUS_ERROR             = 0xF5, /*!< Error status of upgrading */
+    FIRMWARE_TYPE_MISMATCH           = 0xF6, /*!< Firmware type don't match */
+    WAITING_CLIENT_UPGRADE_STATUS    = 0xF7, /*!< Upgrade host need the upgrade status pushing from Client (CmdID = 0x41) */
+    REMOTE_CONTROL_UNCONNECTED       = 0xF8, /*!< Not connect remote control yet */
+    MOTOR_NOT_STOPPED                = 0xF9, /*!< Motor is not stopped yet */
+    HARDWARE_ERROR                   = 0xFA, /*!< Hardware fault */
+    INSUFFICIENT_ELECTRICITY         = 0xFB, /*!< Device is of insufficient electricity */
+    AIRCRAFT_UNCONNECTED             = 0xFC, /*!< Aircraft is not connected yet */
+    FLASH_IS_ERASING                 = 0xFD, /*!< Flash is erasing (Avoid APP waiting timeout) */
+    CANNOT_UPGRADE_IN_CUR_STATE      = 0xFE, /*!< Cannot upgrade in current status (Please reboot or contact with DJI support */
+    UNDEFINE_ERROR                   = 0xFF, /*!< Undefined error */
+  };
+ private:
+  static const uint8_t moduleIDLeftMove = 40;
+  static const uint8_t functionIDLeftMove = 32;
+
+  /*! @brief The err code message data of the PSDKCommonErr error code messages.
+   */
+  static const std::pair<const ErrorCode::ErrorCodeType, ErrorCode::ErrorCodeMsg> PSDKCommonErrData[];
+
+  /*! @brief Get the map container of the PSDKCommonErr error code messages.
+   */
+  static const ErrorCodeMapType getPSDKCommonErrorMap();
+
+  /*! @brief The err code message data of the CameraCommonErr error code messages.
+   */
+  static const std::pair<const ErrorCode::ErrorCodeType, ErrorCode::ErrorCodeMsg> CameraCommonErrData[];
+
+  /*! @brief Get the map container of the CameraCommonErr error code messages.
+   */
+  static const ErrorCodeMapType getCameraCommonErrorMap();
+
+  /*! @brief The err code message data of the SystemCommonErr error code messages.
+   */
+  static const std::pair<const ErrorCode::ErrorCodeType, ErrorCode::ErrorCodeMsg> SystemCommonErrData[];
+
+  /*! @brief Get the map container of the SystemCommonErr error code messages.
+   */
+  static const ErrorCodeMapType getSystemCommonErrorMap();
+
+  /*! @brief The array to contain all the function maps of camera.
+   */
+  static const FunctionDataType CameraFunction[functionMaxCnt];
+
+  /*! @brief The array to contain all the function maps of psdk.
+   */
+  static const FunctionDataType PSDKFunction[functionMaxCnt];
+
+  /*! @brief The array to contain all the function maps of System.
+   */
+  static const FunctionDataType SystemFunction[functionMaxCnt];
+
+  /*! @brief The array to contain all the modules' function data.
+   */
+  static const ModuleDataType module[ModuleMaxCnt];
+
+
+};  // Class ErrorCode
+
+}  // namespace OSDK
+}  // namespace DJI
 
 #endif /* DJI_ERROR_H */

@@ -100,6 +100,9 @@ typedef enum
   TOPIC_GIMBAL_CONTROL_MODE,
   TOPIC_FLIGHT_ANOMALY,
   TOPIC_POSITION_VO,
+  TOPIC_AVOID_DATA,
+  TOPIC_HOME_POINT_SET_STATUS,
+  TOPIC_HOME_POINT_INFO,
   TOTAL_TOPIC_NUMBER              // Always put this line in the end
 } TopicName;
 // clang-format on
@@ -132,6 +135,8 @@ typedef enum
   UID_RTK_YAW                  = 0xf45d73fd,
   UID_RTK_POSITION_INFO        = 0xda4a57b5,
   UID_RTK_YAW_INFO             = 0xcb72b9e3,
+  UID_HOME_POINT_SET_STATUS    = 0xb5c2211f,
+  UID_HOME_POINT_INFO          = 0xbfe4b520,
   UID_COMPASS                  = 0xdf3d72b7,
   UID_RC                       = 0x739f7fe4,
   UID_GIMBAL_ANGLES            = 0x01f71678,
@@ -151,7 +156,8 @@ typedef enum
   UID_RTK_CONNECT_STATUS       = 0x6f349326,
   UID_GIMBAL_CONTROL_MODE      = 0x326a446d,
   UID_FLIGHT_ANOMALY           = 0x0a624b4b,
-  UID_POSITION_VO              = 0xd3462697
+  UID_POSITION_VO              = 0xd3462697,
+  UID_AVOID_DATA               = 0xf6405daa
 } TOPIC_UID;
 
 // clang-format on
@@ -283,18 +289,18 @@ typedef struct GPSFused
 } GPSFused;                         // pack(1)
 
 /*!
- * @brief struct for data broadcast, return obstacle info around the vehicle
+ * @brief struct for data broadcast and subscription, return obstacle info around the vehicle
  *
  * @note available in M210 (front, up, down)
  */
 typedef struct RelativePosition
 {
-  float32_t down;            /*!< distance from obstacle (cm) */
-  float32_t front;           /*!< distance from obstacle (cm) */
-  float32_t right;           /*!< distance from obstacle (cm) */
-  float32_t back;            /*!< distance from obstacle (cm) */
-  float32_t left;            /*!< distance from obstacle (cm) */
-  float32_t up;              /*!< distance from obstacle (cm) */
+  float32_t down;            /*!< distance from obstacle (m) */
+  float32_t front;           /*!< distance from obstacle (m) */
+  float32_t right;           /*!< distance from obstacle (m) */
+  float32_t back;            /*!< distance from obstacle (m) */
+  float32_t left;            /*!< distance from obstacle (m) */
+  float32_t up;              /*!< distance from obstacle (m) */
   uint8_t   downHealth : 1;  /*!< Down sensor flag: 0 - not working, 1 - working */
   uint8_t   frontHealth : 1; /*!< Front sensor flag: 0 - not working, 1 - working */
   uint8_t   rightHealth : 1; /*!< Right sensor flag: 0 - not working, 1 - working */
@@ -325,6 +331,16 @@ typedef struct PositionData
   float32_t HFSL;      /*!< height above mean sea level (m) */
 } PositionData;        // pack(1)
 
+typedef struct HomeLocationData
+{
+  float64_t latitude;  /*!< unit: rad */
+  float64_t longitude; /*!< unit: rad */
+}HomeLocationData; // pack(1)
+
+typedef struct HomeLocationSetStatus
+{
+  uint8_t status;     /*!<0:fail, 1:success*/
+}HomeLocationSetStatus;// pack(1)
 /*!
  * @brief struct for TOPIC_GPS_DETAILS and sub struct for GPSInfo of data
  * broadcast
@@ -794,7 +810,9 @@ template <> struct TypeMap<TOPIC_RTK_CONNECT_STATUS       > { typedef RTKConnect
 template <> struct TypeMap<TOPIC_GIMBAL_CONTROL_MODE      > { typedef GimbalControlMode type;};
 template <> struct TypeMap<TOPIC_FLIGHT_ANOMALY           > { typedef FlightAnomaly   type;};
 template <> struct TypeMap<TOPIC_POSITION_VO              > { typedef LocalPositionVO type;};
-
+template <> struct TypeMap<TOPIC_AVOID_DATA               > { typedef RelativePosition type;};
+template <> struct TypeMap<TOPIC_HOME_POINT_SET_STATUS    > { typedef HomeLocationSetStatus type;};
+template <> struct TypeMap<TOPIC_HOME_POINT_INFO          > { typedef HomeLocationData    type;};
 // clang-format on
 }
 }

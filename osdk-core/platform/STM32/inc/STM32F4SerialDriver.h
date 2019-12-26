@@ -45,5 +45,5 @@ public:
   {
     return 8;
   }
-  static void delay_nms(uint16_t time);
+  static void sleep_nms(uint16_t time);
 };
