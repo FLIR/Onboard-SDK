@@ -31,6 +31,8 @@ set(DJIOSDK_PATCH_VERSION 0)
 set(DJIOSDK_VERSION
   ${DJIOSDK_MAJOR_VERSION}.${DJIOSDK_MINOR_VERSION}.${DJIOSDK_PATCH_VERSION})
 
+set(CMAKE_CXX_FLAGS "")
+
 # Define our build options
 option(ADVANCED_SENSING "Enable building of DJI advanced sensing tools" OFF)
 option(DJI_SAMPLES "Enable building of DJI example applications" OFF)
