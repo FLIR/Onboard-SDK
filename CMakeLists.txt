@@ -25,13 +25,23 @@ project(onboardsdk)
 
 set(CMAKE_VERBOSE_MAKEFILE OFF)
 
-set(DJIOSDK 0)
+set(DJIOSDK_MAJOR_VERSION 0)
 set(DJIOSDK_MINOR_VERSION 1)
 set(DJIOSDK_PATCH_VERSION 0)
-set(DJIOSDK_VERSION
-  ${DJIOSDK_MAJOR_VERSION}.${DJIOSDK_MINOR_VERSION}.${DJIOSDK_PATCH_VERSION})
+set(DJIOSDK_VERSION ${DJIOSDK_MAJOR_VERSION}.${DJIOSDK_MINOR_VERSION}.${DJIOSDK_PATCH_VERSION})
 
+# Setup C++ compiler flags
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_FLAGS "")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-comment")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-parameter")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-ignored-qualifiers")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated-declarations")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-reserved-id-macro")
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ggdb")
+endif()
 
 # Define our build options
 option(ADVANCED_SENSING "Enable building of DJI advanced sensing tools" OFF)
