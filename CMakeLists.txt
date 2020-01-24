@@ -29,7 +29,7 @@ set(OSDK_MINOR_VERSION 9)
 set(OSDK_PATCH_VERSION 0)
 set(OSDK_VERSION ${OSDK_MAJOR_VERSION}.${OSDK_MINOR_VERSION}.${OSDK_PATCH_VERSION})
 
-message(STATUS "${PROJECT_NAME} ... ${PSDK_VERSION}")
+message(STATUS "${PROJECT_NAME} ... ${OSDK_VERSION}")
 
 # Define our build options
 option(ADVANCED_SENSING "Enable building of DJI advanced sensing tools" OFF)
